@@ -16,9 +16,6 @@ func (s *Set) ensureBucketCapacity(bucketIndex int) {
 }
 
 func (s *Set) getBucket(i int64) int {
-	if i == 64 {
-		return 0 // This feels like a hack. But 64 should still be in the first bucket
-	}
 	return int(math.Floor(float64(i) / 64))
 }
 
