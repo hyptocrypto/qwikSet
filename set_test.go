@@ -1,27 +1,33 @@
 package main
 
 import (
-	"fmt"
 	"testing"
 )
 
 func TestGetBucket(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    int64
+		expected int
+	}{
+		{"Bucket for 63", 63, 0},
+		{"Bucket for 64", 64, 0},
+		{"Bucket for 100", 100, 1},
+		{"Bucket for 640", 640, 10},
+		{"Bucket for 0", 0, 0},
+		{"Bucket for 128", 128, 2},
+		{"Bucket for 512", 512, 8},
+		{"Bucket for 1023", 1023, 15},
+	}
+
 	s := NewSet()
-	b := s.getBucket(63)
-	if b != 0 {
-		t.Error("expected to get bucket 0 for 63")
-	}
-	b = s.getBucket(64)
-	if b != 0 {
-		t.Error("expected to get bucket 0 for 64")
-	}
-	b = s.getBucket(100)
-	if b != 1 {
-		t.Error("expected to get bucket 1 for 100")
-	}
-	b = s.getBucket(640)
-	if b != 10 {
-		t.Error("expected to get bucket 10 for 640")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := s.getBucket(tt.input)
+			if result != tt.expected {
+				t.Errorf("getBucket(%d) = %d; want %d", tt.input, result, tt.expected)
+			}
+		})
 	}
 }
 
@@ -31,5 +37,15 @@ func TestSet(t *testing.T) {
 	if !s.Contains(10) {
 		t.Error("expected set to contain 10")
 	}
-	fmt.Printf("%b\n", s.buckets[0].set)
+	s.Add(100)
+	if !s.Contains(100) {
+		t.Error("expected set to contain 10")
+	}
+	if s.Contains(11) {
+		t.Error("expected set to not contain 11")
+	}
+	s.Remove(10)
+	if s.Contains(10) {
+		t.Error("expected set to not contain 10")
+	}
 }

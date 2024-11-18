@@ -1,18 +1,18 @@
 package main
 
-import "math"
-
-type bucket struct {
-	idx int
-	set int64
-}
+import (
+	"math"
+)
 
 type Set struct {
-	buckets []bucket
+	buckets []uint64
 }
 
-func (s *Set) addBucket() {
-	s.buckets = append(s.buckets, bucket{len(s.buckets) - 1, 0})
+func (s *Set) ensureBucketCapacity(bucketIndex int) {
+	// Add enough buckets to cover the requested bucket index
+	for len(s.buckets) <= bucketIndex {
+		s.buckets = append(s.buckets, 0)
+	}
 }
 
 func (s *Set) getBucket(i int64) int {
@@ -22,23 +22,30 @@ func (s *Set) getBucket(i int64) int {
 	return int(math.Floor(float64(i) / 64))
 }
 
-func (s *Set) removeBucket(idx int64) {}
-
-func (s *Set) Contains(i int) bool {
-	return true
+func (s *Set) Contains(i int64) bool {
+	bIdx := s.getBucket(i)
+	if bIdx >= len(s.buckets) {
+		return false // If the bucket doesn't exist, the value isn't in the set
+	}
+	bitIndex := i % 64
+	return s.buckets[bIdx]&(uint64(1)<<bitIndex) != 0
 }
 
 func (s *Set) Add(i int64) {
 	bIdx := s.getBucket(i)
-	if len(s.buckets) < bIdx {
-		s.addBucket()
-	}
-	set := s.buckets[bucketIdx].set
-	s.buckets[bucketIdx].set = set | int64(1)<<i
+	s.ensureBucketCapacity(bIdx)
+	bitIndex := i % 64
+	s.buckets[bIdx] |= uint64(1) << bitIndex
 }
 
-func (s *Set) Remove(i int) {}
+func (s *Set) Remove(i int64) {
+	bIdx := s.getBucket(i)
+	if bIdx < len(s.buckets) {
+		bitIndex := i % 64
+		s.buckets[bIdx] &^= uint64(1) << bitIndex // Clear the bit
+	}
+}
 
 func NewSet() *Set {
-	return &Set{buckets: []bucket{{0, 0}}}
+	return &Set{buckets: []uint64{0}}
 }
