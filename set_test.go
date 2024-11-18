@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math/rand"
 	"testing"
 )
 
@@ -84,5 +85,63 @@ func TestSet(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func BenchmarkSet_Add(b *testing.B) {
+	s := NewSet()
+	for i := 0; i < b.N; i++ {
+		s.Add(rand.Int63n(1000000))
+	}
+}
+
+func BenchmarkMap_Add(b *testing.B) {
+	m := make(map[int64]struct{})
+	for i := 0; i < b.N; i++ {
+		m[rand.Int63n(1000000)] = struct{}{}
+	}
+}
+
+func BenchmarkSet_Contains(b *testing.B) {
+	s := NewSet()
+	for i := 0; i < 1000000; i++ {
+		s.Add(int64(i))
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = s.Contains(rand.Int63n(1000000))
+	}
+}
+
+func BenchmarkMap_Contains(b *testing.B) {
+	m := make(map[int64]struct{})
+	for i := 0; i < 1000000; i++ {
+		m[int64(i)] = struct{}{}
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _ = m[rand.Int63n(1000000)]
+	}
+}
+
+func BenchmarkSet_Remove(b *testing.B) {
+	s := NewSet()
+	for i := 0; i < 1000000; i++ {
+		s.Add(int64(i))
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		s.Remove(rand.Int63n(1000000))
+	}
+}
+
+func BenchmarkMap_Remove(b *testing.B) {
+	m := make(map[int64]struct{})
+	for i := 0; i < 1000000; i++ {
+		m[int64(i)] = struct{}{}
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		delete(m, rand.Int63n(1000000))
 	}
 }
