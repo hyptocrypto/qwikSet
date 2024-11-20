@@ -2,13 +2,14 @@ package main
 
 import (
 	"math/rand"
+	"reflect"
 	"testing"
 )
 
 func TestGetBucket(t *testing.T) {
 	tests := []struct {
 		name     string
-		input    int64
+		input    int
 		expected int
 	}{
 		{"Bucket for 63", 63, 0},
@@ -76,7 +77,7 @@ func TestSet(t *testing.T) {
 			tt.actions(s)
 
 			for value, want := range tt.expected {
-				if got := s.Contains(int64(value)); got != want {
+				if got := s.Contains(int(value)); got != want {
 					if want {
 						t.Errorf("expected set to contain %d, but it did not", value)
 					} else {
@@ -88,60 +89,191 @@ func TestSet(t *testing.T) {
 	}
 }
 
+func TestIntersection(t *testing.T) {
+	type test struct {
+		name     string
+		set1     []int
+		set2     []int
+		expected []int
+	}
+	tests := []test{
+		{
+			name:     "Basic intersection",
+			set1:     []int{1, 2, 100},
+			set2:     []int{1, 100},
+			expected: []int{1, 100},
+		},
+		{
+			name:     "No intersection",
+			set1:     []int{1, 2, 3},
+			set2:     []int{4, 5, 6},
+			expected: []int{},
+		},
+		{
+			name:     "Identical sets",
+			set1:     []int{10, 20, 30},
+			set2:     []int{10, 20, 30},
+			expected: []int{10, 20, 30},
+		},
+		{
+			name:     "One empty set",
+			set1:     []int{1, 2, 3},
+			set2:     []int{},
+			expected: []int{},
+		},
+		{
+			name:     "Both empty sets",
+			set1:     []int{},
+			set2:     []int{},
+			expected: []int{},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			s1 := NewSet()
+			s2 := NewSet()
+			for _, val1 := range tc.set1 {
+				s1.Add(val1)
+			}
+
+			for _, val2 := range tc.set2 {
+				s2.Add(val2)
+			}
+			result := s1.Intersection(s2)
+			if !reflect.DeepEqual(result, tc.expected) {
+				t.Errorf("expected: %v, got %v", tc.expected, result)
+			}
+		})
+	}
+}
+
 func BenchmarkSet_Add(b *testing.B) {
 	s := NewSet()
 	for i := 0; i < b.N; i++ {
-		s.Add(rand.Int63n(1000000))
+		s.Add(rand.Intn(1000000))
 	}
 }
 
 func BenchmarkMap_Add(b *testing.B) {
-	m := make(map[int64]struct{})
+	m := make(map[int]struct{})
 	for i := 0; i < b.N; i++ {
-		m[rand.Int63n(1000000)] = struct{}{}
+		m[rand.Intn(1000000)] = struct{}{}
 	}
 }
 
 func BenchmarkSet_Contains(b *testing.B) {
 	s := NewSet()
 	for i := 0; i < 1000000; i++ {
-		s.Add(int64(i))
+		s.Add(int(i))
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = s.Contains(rand.Int63n(1000000))
+		_ = s.Contains(rand.Intn(1000000))
 	}
 }
 
 func BenchmarkMap_Contains(b *testing.B) {
-	m := make(map[int64]struct{})
+	m := make(map[int]struct{})
 	for i := 0; i < 1000000; i++ {
-		m[int64(i)] = struct{}{}
+		m[int(i)] = struct{}{}
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = m[rand.Int63n(1000000)]
+		_, _ = m[rand.Intn(1000000)]
 	}
 }
 
 func BenchmarkSet_Remove(b *testing.B) {
 	s := NewSet()
 	for i := 0; i < 1000000; i++ {
-		s.Add(int64(i))
+		s.Add(int(i))
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		s.Remove(rand.Int63n(1000000))
+		s.Remove(rand.Intn(1000000))
 	}
 }
 
 func BenchmarkMap_Remove(b *testing.B) {
-	m := make(map[int64]struct{})
+	m := make(map[int]struct{})
 	for i := 0; i < 1000000; i++ {
-		m[int64(i)] = struct{}{}
+		m[int(i)] = struct{}{}
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		delete(m, rand.Int63n(1000000))
+		delete(m, rand.Intn(1000000))
+	}
+}
+
+func generateRandomInts(size, maxValue int) []int {
+	nums := make([]int, size)
+	for i := range nums {
+		nums[i] = rand.Intn(maxValue)
+	}
+	return nums
+}
+
+func populateSet(values []int) *Set {
+	set := NewSet()
+	for _, v := range values {
+		set.Add(v)
+	}
+	return set
+}
+
+func populateMap(values []int) map[int]struct{} {
+	m := make(map[int]struct{})
+	for _, v := range values {
+		m[v] = struct{}{}
+	}
+	return m
+}
+
+func mapIntersection(a, b map[int]struct{}) []int {
+	intersection := []int{}
+	for k := range a {
+		if _, exists := b[k]; exists {
+			intersection = append(intersection, k)
+		}
+	}
+	return intersection
+}
+
+func BenchmarkSetIntersection(b *testing.B) {
+	setSize := 10000000
+	otherSetSize := 10000000
+	maxValue := 100000000
+
+	// Generate test data
+	setData := generateRandomInts(setSize, maxValue)
+	otherSetData := generateRandomInts(otherSetSize, maxValue)
+
+	// Populate sets
+	setA := populateSet(setData)
+	setB := populateSet(otherSetData)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = setA.Intersection(setB)
+	}
+}
+
+func BenchmarkMapIntersection(b *testing.B) {
+	setSize := 10000000
+	otherSetSize := 10000000
+	maxValue := 100000000
+
+	// Generate test data
+	setData := generateRandomInts(setSize, maxValue)
+	otherSetData := generateRandomInts(otherSetSize, maxValue)
+
+	// Populate maps
+	mapA := populateMap(setData)
+	mapB := populateMap(otherSetData)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = mapIntersection(mapA, mapB)
 	}
 }
