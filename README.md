@@ -10,9 +10,13 @@ The idea here is to use a uint64 to represent a set of unsigned integers. Each b
 Simple benchmarks show that this greatly out preforms maps for basic operations.
 `go test -bench=.`
 
-BenchmarkSet_Add-8 138949357 8.624 ns/op<br/>
-BenchmarkMap_Add-8 19391040 54.42 ns/op<br/>
-BenchmarkSet_Contains-8 155588612 7.730 ns/op<br/>
-BenchmarkMap_Contains-8 24343856 48.92 ns/op<br/>
-BenchmarkSet_Remove-8 145143080 8.274 ns/op<br/>
-BenchmarkMap_Remove-8 42810177 23.52 ns/op
+```plaintext
+BenchmarkSet_Add-8            131569177          8.737 ns/op
+BenchmarkMap_Add-8            20781769         55.25 ns/op
+BenchmarkSet_Contains-8       147043798          8.173 ns/op
+BenchmarkMap_Contains-8       24885315         50.67 ns/op
+BenchmarkSet_Remove-8         129638083          9.048 ns/op
+BenchmarkMap_Remove-8         20823296         56.79 ns/op
+BenchmarkSetIntersection-8          38   29161691 ns/op
+BenchmarkMapIntersection-8           2  569464792 ns/op
+```

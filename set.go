@@ -46,26 +46,27 @@ func (s *Set) Remove(i int) {
 }
 
 func (s *Set) Intersection(otherSet *Set) []int {
-	ret := []int{}
-	var inc int = 0
-	for i := range s.buckets {
-		if len(otherSet.buckets) < i {
-			continue
-		}
-		r := s.buckets[i] & otherSet.buckets[i]
-		if r > 0 {
-			var p int = 0
-			for r > 0 {
-				if r&1 == 1 {
-					ret = append(ret, p+inc)
+	result := []int{}
+
+	minBuckets := len(s.buckets)
+	if len(otherSet.buckets) < minBuckets {
+		minBuckets = len(otherSet.buckets)
+	}
+
+	for bucketIndex := 0; bucketIndex < minBuckets; bucketIndex++ {
+		commonBits := s.buckets[bucketIndex] & otherSet.buckets[bucketIndex]
+		if commonBits != 0 {
+			bitOffset := bucketIndex * intBitSize
+			for bit := 0; commonBits != 0; bit++ {
+				if commonBits&1 != 0 {
+					result = append(result, bitOffset+bit)
 				}
-				r >>= 1
-				p++
+				commonBits >>= 1
 			}
-			inc += intBitSize
 		}
 	}
-	return ret
+
+	return result
 }
 
 func NewSet() *Set {
