@@ -18,7 +18,7 @@ func (s *Set) ensureBucketCapacity(bucketIndex int) {
 }
 
 func (s *Set) getBucket(i int) int {
-	return int(float64(i) / 64)
+	return int(i / intBitSize)
 }
 
 func (s *Set) Contains(i int) bool {
